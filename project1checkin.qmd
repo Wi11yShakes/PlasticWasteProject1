@@ -1,0 +1,96 @@
+---
+title: "Project1 Draft"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-01-26/plastics.csv')
+```
+
+## Context
+
+This data set was independently gathered by an individual in order to contribute to the global audit that the Break Free from Plastic organization holds each year. They collected data in their own town of St. John in Newfoundland. The dataset has information on the amount of different plastic waste (polyester, PVC, polyethylene, etc...) as well as the grand total of all plastic types, number of counting events, and number of volunteers at each cleanup.
+
+## Data Cleaning:
+
+From the included code on the data set, we can see that they have already taken measures to clean the data. It appears that most of the cleaning is making sure that each variable is the correct type as well as renaming columns and fixing all the numeric values.
+
+## Research Questions w/ Data:
+
+-   Does the mean average of plastic waste per count event differ between each plastic type?
+
+-   Does the overall plastic waste differ between 2019 and 2020?
+
+-   What is the relationship between the amount of volunteers and the
+
+## Research Questions w/ Supplemental Data:
+
+-   Does the average plastic waste in St. John differ from other cities?
+
+-   Does the amount of volunteers St. John has differ from other cities?
+
+## Potential Visualizations:
+
+-   <https://excalidraw.com/#json=VqbcZ1Dds7wym3M6Ux9X5,LvRZ1Q5smV5xQozI1HNt0w>
+
+```{r}
+## Does the parent company send different amount of volunteers to different countries?
+
+country_volunteers <- function(company_name) {
+  plastics  |>
+    filter(parent_company == company_name) |>
+    group_by(country) |>
+    summarise(
+      total_volunteers = sum(volunteers, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    arrange(desc(total_volunteers))
+}
+
+country_volunteers("The Coca-Cola Company")
+country_volunteers("Doble Cola")
+```
+
+```{r}
+## Creating proportions of volunteers 
+volunteer_props <- function(data) {
+  data |>
+    group_by(parent_company) |>
+    mutate(prop_volunteers = volunteers / sum(volunteers, na.rm = TRUE)) |>
+    ungroup()
+}
+
+volunteer_props(plastics)
+```
+
+##Iterations
+
+```{r}
+#Total waste per plastic type
+plastic_types <- c("hdpe", "ldpe", "o", "pet", "pp", "ps", "pvc")
+
+plastic_summary <- data.frame()
+
+for (type in plastic_types) {
+  
+  placehold <- plastics |>
+    summarise(
+      plastic_type = type,
+      total_waste = sum(.data[[type]], na.rm = TRUE)
+    )
+  
+  plastic_summary <- bind_rows(plastic_summary, placehold)
+}
+
+plastic_summary
+```
+
+```{r}
+volunteer_summary <- plastics %>% 
+  map(.f = country_volunteers) %>% 
+  bind_rows(.id = "id")
+
+volunteer_summary
+```
